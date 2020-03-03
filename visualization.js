@@ -1,10 +1,18 @@
-// set the dimensions and margins of the graph
-let margin = {top: 20, right: 20, bottom: 30, left: 40};
+let mouseDown = 0;
+document.body.onmousedown = d => ++mouseDown;
+document.body.onmouseup = d => --mouseDown;
 
+pColor = "rgb(213,91,97)";
+qColor = "rgb(61,191,0)";
+
+// set the dimensions and margins of the graph
 let svg = d3.select("svg");
 
-let header_size = document.querySelector("body > nav").clientHeight;
-let footer_size = document.querySelector("body > footer").clientHeight;
+const margin = {top: 20, right: 20, bottom: 30, left: 40};
+const header_size = document.querySelector("body > nav").clientHeight;
+const footer_size = document.querySelector("body > footer").clientHeight;
+
+const bottomSpace = 80;
 
 document.querySelector("svg").style.width = window.innerWidth + "px";
 document.querySelector("svg").style.height = window.innerHeight - header_size - footer_size + "px";
@@ -14,54 +22,128 @@ let height = window.innerHeight - header_size - footer_size - margin.top - margi
 
 svg = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-/*
-
 // set the ranges
 let x = d3.scaleBand().range([0, width]).padding(0.1);
-let y = d3.scaleLinear().range([height, 0]);
+let y = d3.scaleLinear().range([height - bottomSpace, 0]);
 
-// get the data
-d3.csv("sales.csv", function (error, data) {
-    if (error) throw error;
+const barCount = 20;
+xValues = d3.range(barCount);
+pValues = d3.range(barCount).sort(() => Math.random() - 0.5);
+qValues = d3.range(barCount).sort(() => Math.random() - 0.5);
 
-    // format the data
-    data.forEach(function (d) {
-        d.sales = +d.sales;
+// Scale the range of the data in the domains
+x.domain(xValues);
+y.domain([0, d3.max(qValues)]);
+pData = d3.zip(xValues, pValues);
+qData = d3.zip(xValues, qValues);
+
+// Back chart only to register the mouse clicks
+svg.selectAll(".backBar")
+    .data(pData)
+    .enter().append("rect")
+    .attr("class", "backBar")
+    .attr("fill", "rgba(245,245,245, 0)")
+    .attr("x", d => x(d[0]))
+    .attr("width", x.bandwidth())
+    .attr("y", y(d3.max(pValues)))
+    .attr("height", height - bottomSpace - y(d3.max(pValues)))
+    .on("click", d => {
+        if (mouseDown) {
+            if (selected === "p") {
+                pData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
+                drawBarchartP();
+            } else {
+                qData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
+                drawBarchartQ();
+            }
+        }
+    })
+    .on("mousemove", d => {
+        if (mouseDown) {
+            if (selected === "p") {
+                pData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
+                drawBarchartP();
+            } else {
+                qData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
+                drawBarchartQ();
+            }
+        }
     });
 
-    // Scale the range of the data in the domains
-    x.domain(data.map(function (d) {
-        return d.salesperson;
-    }));
-    y.domain([0, d3.max(data, function (d) {
-        return d.sales;
-    })]);
+make_y_gridlines = d => d3.axisLeft(y).ticks(barCount);
+svg.append("g")
+    .attr("class", "grid")
+    .call(make_y_gridlines()
+        .tickSize(-width)
+        .tickFormat("")
+    );
 
-    // append the rectangles for the bar chart
-    svg.selectAll(".bar")
-        .data(data)
-        .enter().append("rect")
-        .attr("class", "bar")
-        .attr("x", function (d) {
-            return x(d.salesperson);
-        })
+function drawBarchartP() {
+    let bars = svg.selectAll(".barP").data(pData);
+
+    bars.transition()
+        .duration(20)
+        .attr("y", d => y(d[1]))
+        .attr("height", d => height - bottomSpace - y(d[1]));
+
+    bars.enter().append("rect")
+        .attr("class", "barP")
+        .attr("opacity", 0.5)
+        .attr("fill", pColor)
+        .attr("x", d => x(d[0]))
         .attr("width", x.bandwidth())
-        .attr("y", function (d) {
-            return y(d.sales);
-        })
-        .attr("height", function (d) {
-            return height - y(d.sales);
-        });
+        .attr("y", d => y(d[1]))
+        .attr("height", d => height - bottomSpace - y(d[1]))
+        .attr("pointer-events", "none")
+}
 
-    // add the x Axis
-    svg.append("g")
-        .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x));
+function drawBarchartQ() {
+    let bars = svg.selectAll(".barQ").data(qData);
 
-    // add the y Axis
-    svg.append("g")
-        .call(d3.axisLeft(y));
+    bars.transition()
+        .duration(20)
+        .attr("y", d => y(d[1]))
+        .attr("height", d => height - bottomSpace - y(d[1]));
 
-});
+    bars.enter().append("rect")
+        .attr("class", "barQ")
+        .attr("opacity", 0.5)
+        .attr("fill", "qColor")
+        .attr("x", d => x(d[0]))
+        .attr("width", x.bandwidth())
+        .attr("y", d => y(d[1]))
+        .attr("height", d => height - bottomSpace - y(d[1]))
+        .attr("pointer-events", "none")
+}
 
-*/
+drawBarchartP();
+drawBarchartQ();
+
+var selected = "p";
+button = svg.append("rect").attr("class", "button")
+    .attr("fill", "yellow")
+    .attr("x", 0)
+    .attr("width", width/8)
+    .attr("y", height - bottomSpace + 30)
+    .attr("height", bottomSpace - 30)
+    .attr("text", "asdasd")
+    .on("click", function () {
+        if (selected === "p") {
+            button.style("fill", qColor);
+            selected = "q";
+        } else {
+            button.style("fill", pColor);
+            selected = "p";
+        }
+    });
+
+// add the x Axis
+svg.append("g")
+    .attr("class", "noselect")
+    .attr("transform", "translate(0," + (height - bottomSpace) + ")")
+    .call(d3.axisBottom(x));
+
+// add the y Axis
+svg.append("g")
+    .attr("class", "noselect")
+    .call(d3.axisLeft(y));
