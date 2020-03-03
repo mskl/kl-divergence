@@ -13,5 +13,5 @@ html, body {
 }
 
 .grid line {
-    stroke: rgba(0, 0, 0, 0.1);
+    stroke: rgba(0, 0, 0, 0.02);
 }

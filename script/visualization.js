@@ -23,17 +23,19 @@ let height = window.innerHeight - header_size - footer_size - margin.top - margi
 svg = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 // set the ranges
-let x = d3.scaleBand().range([0, width]).padding(0.1);
+let x = d3.scaleBand().range([0, width]).padding(0.13);
+let x_nopad = d3.scaleBand().range([0, width]);
 let y = d3.scaleLinear().range([height - bottomSpace, 0]);
 
-const barCount = 10;
+const barCount = 42;
 xValues = d3.range(barCount);
-pValues = d3.range(barCount).sort(() => Math.random() - 0.5);
-qValues = d3.range(barCount).sort(() => Math.random() - 0.5);
+pValues = d3.range(1, barCount+1).sort(() => Math.random() - 0.5).map(d=>d/barCount);
+qValues = d3.range(1, barCount+1).sort(() => Math.random() - 0.5).map(d=>d/barCount);
 
 // Scale the range of the data in the domains
 x.domain(xValues);
-y.domain([0, d3.max(qValues)]);
+x_nopad.domain(xValues);
+y.domain([0, 1]);
 pData = d3.zip(xValues, pValues);
 qData = d3.zip(xValues, qValues);
 
@@ -42,19 +44,19 @@ svg.selectAll(".backBar")
     .data(pData)
     .enter().append("rect")
     .attr("class", "backBar")
-    .attr("fill", "rgba(245,245,245, 0)")
-    .attr("x", d => x(d[0]))
-    .attr("width", x.bandwidth())
-    .attr("y", y(d3.max(pValues)))
+    .attr("fill", "white")
+    .attr("x", d => x_nopad(d[0]))
+    .attr("width", x_nopad.bandwidth())
+    .attr("y", y(1))
     .attr("height", height - bottomSpace - y(d3.max(pValues)))
     .on("click", d => {
         if (mouseDown) {
             updateKLDivergence();
             if (selected === "P") {
-                pData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
+                pData[d[0]][1] = y.invert(d3.mouse(d3.event.currentTarget)[1]);
                 drawBarchartP();
             } else {
-                qData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
+                qData[d[0]][1] = y.invert(d3.mouse(d3.event.currentTarget)[1]);
                 drawBarchartQ();
             }
         }
@@ -63,10 +65,10 @@ svg.selectAll(".backBar")
         if (mouseDown) {
             updateKLDivergence();
             if (selected === "P") {
-                pData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
+                pData[d[0]][1] = y.invert(d3.mouse(d3.event.currentTarget)[1]);
                 drawBarchartP();
             } else {
-                qData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
+                qData[d[0]][1] = y.invert(d3.mouse(d3.event.currentTarget)[1]);
                 drawBarchartQ();
             }
         }
@@ -84,7 +86,7 @@ function drawBarchartP() {
     let bars = svg.selectAll(".barP").data(pData);
 
     bars.transition()
-        .duration(20)
+        .duration(40)
         .attr("y", d => y(d[1]))
         .attr("height", d => height - bottomSpace - y(d[1]));
 
@@ -103,7 +105,7 @@ function drawBarchartQ() {
     let bars = svg.selectAll(".barQ").data(qData);
 
     bars.transition()
-        .duration(20)
+        .duration(40)
         .attr("y", d => y(d[1]))
         .attr("height", d => height - bottomSpace - y(d[1]));
 
@@ -159,10 +161,12 @@ function updateKLDivergence() {
     let pmarg = pvals.map(d=>d/psum);
     let qmarg = qvals.map(d=>d/qsum);
 
-    let klres = d3.zip(pmarg, qmarg).map(d=>Math.log(d[0])*(d[0]/d[1]));
+    let klres = d3.zip(pmarg, qmarg).map(d=>d[0]*Math.log(d[1]/d[0]));
     let klsum = -d3.sum(klres);
     textGroupText.text("DKL(P||Q)=" + klsum);
 }
+
+updateKLDivergence();
 
 
 // add the x Axis
