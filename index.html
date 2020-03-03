@@ -4,11 +4,22 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <script src="vendor/mathjax/polyfill.min.js"></script>
-    <script src="vendor/mathjax/tex-mml-chtml.js" async id="MathJax-script"></script>
+
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML">
+    </script>
+
     <script src="vendor/d3js/d3.v4.min.js"></script>
 
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+            extensions: ["tex2jax.js", "TeX/AMSmath.js"],
+            jax: ["input/TeX", "output/SVG"],
+        })
+    </script>
+
+
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="styles/style.css" rel="stylesheet">
     <title>KL–Divergence Visualization</title>
 </head>
@@ -43,14 +54,17 @@
 <div class="container-fluid">
     <div class="row justify-content-center">
         <div class="min-vw-100 text-center">
-            <svg></svg>
+            <svg id="barchartSVG"></svg>
         </div>
+    </div>
+    <div class="row p-2" id="bottomText">
+        \( D_\text{KL}(P \parallel Q) = \sum_{x\in\mathcal{X}} P(x) \log\left(\frac{P(x)}{Q(x)}\right) \)
     </div>
 </div>
 
 <!-- Page Footer -->
-<footer class="page-footer font-small p-2 bg-primary text-white noselect">
-    <div class="footer-copyright text-center py-2">Matyáš Skalický</div>
+<footer class="page-footer font-small p-3 bg-primary text-white noselect">
+    <div class="footer-copyright text-center py-2">Matyáš Skalický 2020</div>
 </footer>
 
 <!-- D3JS visualization -->

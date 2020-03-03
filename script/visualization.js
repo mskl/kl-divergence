@@ -10,21 +10,22 @@ let svg = d3.select("svg");
 
 const margin = {top: 20, right: 20, bottom: 30, left: 40};
 const header_size = document.querySelector("body > nav").clientHeight;
+const bottom_size = document.querySelector("#bottomText").clientHeight;
 const footer_size = document.querySelector("body > footer").clientHeight;
 
 const bottomSpace = 80;
 
 document.querySelector("svg").style.width = window.innerWidth + "px";
-document.querySelector("svg").style.height = window.innerHeight - header_size - footer_size + "px";
+document.querySelector("svg").style.height = window.innerHeight - header_size - footer_size - bottom_size + "px";
 
 let width = window.innerWidth - margin.left - margin.right;
-let height = window.innerHeight - header_size - footer_size - margin.top - margin.bottom;
+let height = window.innerHeight - header_size - footer_size - margin.top - margin.bottom - bottom_size;
 
 svg = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 // set the ranges
 let x = d3.scaleBand().range([0, width]).padding(0.13);
-let x_nopad = d3.scaleBand().range([0, width]);
+let xNoPad = d3.scaleBand().range([0, width]);
 let y = d3.scaleLinear().range([height - bottomSpace, 0]);
 
 const barCount = 42;
@@ -34,7 +35,7 @@ qValues = d3.range(1, barCount+1).sort(() => Math.random() - 0.5).map(d=>d/barCo
 
 // Scale the range of the data in the domains
 x.domain(xValues);
-x_nopad.domain(xValues);
+xNoPad.domain(xValues);
 y.domain([0, 1]);
 pData = d3.zip(xValues, pValues);
 qData = d3.zip(xValues, qValues);
@@ -45,8 +46,8 @@ svg.selectAll(".backBar")
     .enter().append("rect")
     .attr("class", "backBar")
     .attr("fill", "white")
-    .attr("x", d => x_nopad(d[0]))
-    .attr("width", x_nopad.bandwidth())
+    .attr("x", d => xNoPad(d[0]))
+    .attr("width", xNoPad.bandwidth())
     .attr("y", y(1))
     .attr("height", height - bottomSpace - y(d3.max(pValues)))
     .on("click", d => {
