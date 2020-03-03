@@ -26,7 +26,7 @@ svg = svg.append("g").attr("transform", "translate(" + margin.left + "," + margi
 let x = d3.scaleBand().range([0, width]).padding(0.1);
 let y = d3.scaleLinear().range([height - bottomSpace, 0]);
 
-const barCount = 20;
+const barCount = 10;
 xValues = d3.range(barCount);
 pValues = d3.range(barCount).sort(() => Math.random() - 0.5);
 qValues = d3.range(barCount).sort(() => Math.random() - 0.5);
@@ -49,7 +49,8 @@ svg.selectAll(".backBar")
     .attr("height", height - bottomSpace - y(d3.max(pValues)))
     .on("click", d => {
         if (mouseDown) {
-            if (selected === "p") {
+            updateKLDivergence();
+            if (selected === "P") {
                 pData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
                 drawBarchartP();
             } else {
@@ -60,7 +61,8 @@ svg.selectAll(".backBar")
     })
     .on("mousemove", d => {
         if (mouseDown) {
-            if (selected === "p") {
+            updateKLDivergence();
+            if (selected === "P") {
                 pData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
                 drawBarchartP();
             } else {
@@ -108,7 +110,7 @@ function drawBarchartQ() {
     bars.enter().append("rect")
         .attr("class", "barQ")
         .attr("opacity", 0.5)
-        .attr("fill", "qColor")
+        .attr("fill", qColor)
         .attr("x", d => x(d[0]))
         .attr("width", x.bandwidth())
         .attr("y", d => y(d[1]))
@@ -119,31 +121,59 @@ function drawBarchartQ() {
 drawBarchartP();
 drawBarchartQ();
 
-var selected = "p";
-button = svg.append("rect").attr("class", "button")
-    .attr("fill", "yellow")
-    .attr("x", 0)
-    .attr("width", width/8)
-    .attr("y", height - bottomSpace + 30)
+let selected = "P";
+buttonGroup = svg.append("g").attr("transform", "translate(" + 0 + "," + (height - margin.top - margin.bottom) + ")");
+buttonRect = buttonGroup.append("rect")
+    .attr("class", "button")
+    .attr("width", 120)
+    .attr("fill", pColor)
     .attr("height", bottomSpace - 30)
-    .attr("text", "asdasd")
     .on("click", function () {
-        if (selected === "p") {
-            button.style("fill", qColor);
-            selected = "q";
+        if (selected === "P") {
+            buttonRect.style("fill", qColor);
+            selected = "Q";
         } else {
-            button.style("fill", pColor);
-            selected = "p";
+            buttonRect.style("fill", pColor);
+            selected = "P";
         }
+        buttonLabel.text("Selected " + selected);
     });
+
+buttonLabel = buttonGroup.append("text")
+    .attr("class", "noselect")
+    .attr("pointer-events", "none")
+    .attr("transform", "translate(20, 30)")
+    .text("Selected P");
+
+
+textGroup = svg.append("g").attr("transform", "translate(" + 150 + "," + (height - margin.top - margin.bottom) + ")");
+textGroupText = textGroup.append("text").attr("class", "noselect").attr("transform", "translate(20, 30)").text("DKL(P||Q)=");
+
+function updateKLDivergence() {
+    let pvals = pData.map(d=>d[1]);
+    let qvals = qData.map(d=>d[1]);
+
+    let psum = d3.sum(pvals);
+    let qsum = d3.sum(qvals);
+
+    let pmarg = pvals.map(d=>d/psum);
+    let qmarg = qvals.map(d=>d/qsum);
+
+    let klres = d3.zip(pmarg, qmarg).map(d=>Math.log(d[0])*(d[0]/d[1]));
+    let klsum = -d3.sum(klres);
+    textGroupText.text("DKL(P||Q)=" + klsum);
+}
+
 
 // add the x Axis
 svg.append("g")
     .attr("class", "noselect")
+    .attr("pointer-events", "none")
     .attr("transform", "translate(0," + (height - bottomSpace) + ")")
     .call(d3.axisBottom(x));
 
 // add the y Axis
 svg.append("g")
     .attr("class", "noselect")
+    .attr("pointer-events", "none")
     .call(d3.axisLeft(y));
