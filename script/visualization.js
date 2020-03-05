@@ -1,32 +1,30 @@
-let mouseDown = 0;
-document.body.onmousedown = d => ++mouseDown;
-document.body.onmouseup = d => --mouseDown;
+var mouseDown = 0;
+// document.body.onmousedown = d => ++mouseDown;
+// document.body.onmouseup = d => --mouseDown;
 
-pColor = "rgb(213,91,97)";
-qColor = "rgb(61,191,0)";
+pColor = "#A7E8BD";
+qColor = "#FCBCB8";
 
 // set the dimensions and margins of the graph
 let svg = d3.select("svg");
 
-const margin = {top: 20, right: 20, bottom: 30, left: 40};
+const margin = {top: 20, right: 20, bottom: 20, left: 40};
 const header_size = document.querySelector("body > nav").clientHeight;
 const bottom_size = document.querySelector("#bottomText").clientHeight;
 const footer_size = document.querySelector("body > footer").clientHeight;
 
-const bottomSpace = 80;
-
 document.querySelector("svg").style.width = window.innerWidth + "px";
-document.querySelector("svg").style.height = window.innerHeight - header_size - footer_size - bottom_size + "px";
+document.querySelector("svg").style.height = window.innerHeight / 1.618 - header_size + margin.top + margin.bottom + "px";
 
 let width = window.innerWidth - margin.left - margin.right;
-let height = window.innerHeight - header_size - footer_size - margin.top - margin.bottom - bottom_size;
+let height = (window.innerHeight) / 1.618 - header_size;
 
 svg = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 // set the ranges
 let x = d3.scaleBand().range([0, width]).padding(0.13);
 let xNoPad = d3.scaleBand().range([0, width]);
-let y = d3.scaleLinear().range([height - bottomSpace, 0]);
+let y = d3.scaleLinear().range([height, 0]);
 
 const barCount = 42;
 xValues = d3.range(barCount);
@@ -49,16 +47,16 @@ svg.selectAll(".backBar")
     .attr("x", d => xNoPad(d[0]))
     .attr("width", xNoPad.bandwidth())
     .attr("y", y(1))
-    .attr("height", height - bottomSpace - y(d3.max(pValues)))
+    .attr("height", height - y(d3.max(pValues)))
     .on("click", d => {
         if (mouseDown) {
             updateKLDivergence();
             if (selected === "P") {
                 pData[d[0]][1] = y.invert(d3.mouse(d3.event.currentTarget)[1]);
-                drawBarchartP();
+                drawBarChart("P");
             } else {
                 qData[d[0]][1] = y.invert(d3.mouse(d3.event.currentTarget)[1]);
-                drawBarchartQ();
+                drawBarChart("Q");
             }
         }
     })
@@ -67,10 +65,10 @@ svg.selectAll(".backBar")
             updateKLDivergence();
             if (selected === "P") {
                 pData[d[0]][1] = y.invert(d3.mouse(d3.event.currentTarget)[1]);
-                drawBarchartP();
+                drawBarChart("P");
             } else {
                 qData[d[0]][1] = y.invert(d3.mouse(d3.event.currentTarget)[1]);
-                drawBarchartQ();
+                drawBarChart("Q");
             }
         }
     });
@@ -83,54 +81,42 @@ svg.append("g")
         .tickFormat("")
     );
 
-function drawBarchartP() {
-    let bars = svg.selectAll(".barP").data(pData);
+function drawBarChart(sel) {
+    let className = sel === "P" ? "barP" : "barQ";
+    let classData = sel === "P" ? pData : qData;
+    let classColor = sel === "P" ? pColor : qColor;
+
+    let bars = svg.selectAll("."+className).data(classData);
 
     bars.transition()
         .duration(40)
         .attr("y", d => y(d[1]))
-        .attr("height", d => height - bottomSpace - y(d[1]));
+        .attr("height", d => height - y(d[1]));
 
     bars.enter().append("rect")
-        .attr("class", "barP")
-        .attr("opacity", 0.5)
-        .attr("fill", pColor)
+        .attr("class",  className)
+        .attr("opacity", 0.7)
+        .attr("fill", classColor)
         .attr("x", d => x(d[0]))
         .attr("width", x.bandwidth())
         .attr("y", d => y(d[1]))
-        .attr("height", d => height - bottomSpace - y(d[1]))
+        .attr("height", d => height - y(d[1]))
         .attr("pointer-events", "none")
 }
 
-function drawBarchartQ() {
-    let bars = svg.selectAll(".barQ").data(qData);
-
-    bars.transition()
-        .duration(40)
-        .attr("y", d => y(d[1]))
-        .attr("height", d => height - bottomSpace - y(d[1]));
-
-    bars.enter().append("rect")
-        .attr("class", "barQ")
-        .attr("opacity", 0.5)
-        .attr("fill", qColor)
-        .attr("x", d => x(d[0]))
-        .attr("width", x.bandwidth())
-        .attr("y", d => y(d[1]))
-        .attr("height", d => height - bottomSpace - y(d[1]))
-        .attr("pointer-events", "none")
-}
-
-drawBarchartP();
-drawBarchartQ();
+drawBarChart("P");
+drawBarChart("Q");
 
 let selected = "P";
-buttonGroup = svg.append("g").attr("transform", "translate(" + 0 + "," + (height - margin.top - margin.bottom) + ")");
+buttonGroup = svg.append("g").attr("transform", "translate(" + 10 + "," + 10 + ")");
 buttonRect = buttonGroup.append("rect")
     .attr("class", "button")
     .attr("width", 120)
     .attr("fill", pColor)
-    .attr("height", bottomSpace - 30)
+    .attr("opacity", 0.8)
+    .attr("height", 30)
+    .attr("rx", 2)
+    .attr("ry", 2)
     .on("click", function () {
         if (selected === "P") {
             buttonRect.style("fill", qColor);
@@ -142,14 +128,14 @@ buttonRect = buttonGroup.append("rect")
         buttonLabel.text("Selected " + selected);
     });
 
-buttonLabel = buttonGroup.append("text")
-    .attr("class", "noselect")
+buttonLabel = buttonGroup.append("text").text("Selected P");
+buttonLabel.attr("class", "noselect")
     .attr("pointer-events", "none")
-    .attr("transform", "translate(20, 30)")
-    .text("Selected P");
+    .attr("transform", "translate(" + 20 + ", " + 22 + ")");
 
 
-textGroup = svg.append("g").attr("transform", "translate(" + 150 + "," + (height - margin.top - margin.bottom) + ")");
+
+textGroup = svg.append("g").attr("transform", "translate(" + 0 + "," + (height-60)  + ")");
 textGroupText = textGroup.append("text").attr("class", "noselect").attr("transform", "translate(20, 30)").text("DKL(P||Q)=");
 
 function updateKLDivergence() {
@@ -164,7 +150,13 @@ function updateKLDivergence() {
 
     let klres = d3.zip(pmarg, qmarg).map(d=>d[0]*Math.log(d[1]/d[0]));
     let klsum = -d3.sum(klres);
-    textGroupText.text("DKL(P||Q)=" + klsum);
+    textGroupText.text("KL(P||Q) = " + klsum);
+
+    // var math = MathJax.Hub.getAllJax("bottomText")[1];
+    // MathJax.Hub.Queue(["Text",math,"" +
+    // "\\displaystyle{ D_\\text{KL}(P \\parallel Q) = \\sum_{x\\in\\mathcal{X}} P(x) " +
+    // "\\log\\left(\\frac{P(x)}{Q(x)}\\right) = " + klsum + " }"]);
+    // MathJax.Hub.Queue(["Text", math, klsum]);
 }
 
 updateKLDivergence();
@@ -174,7 +166,7 @@ updateKLDivergence();
 svg.append("g")
     .attr("class", "noselect")
     .attr("pointer-events", "none")
-    .attr("transform", "translate(0," + (height - bottomSpace) + ")")
+    .attr("transform", "translate(0," + (height) + ")")
     .call(d3.axisBottom(x));
 
 // add the y Axis

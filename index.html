@@ -15,6 +15,7 @@
         MathJax.Hub.Config({
             extensions: ["tex2jax.js", "TeX/AMSmath.js"],
             jax: ["input/TeX", "output/SVG"],
+            tex2jax: {preview: "none"}
         })
     </script>
 
@@ -57,8 +58,9 @@
             <svg id="barchartSVG"></svg>
         </div>
     </div>
-    <div class="row p-2" id="bottomText">
+    <div class="row p-4" id="bottomText">
         \( D_\text{KL}(P \parallel Q) = \sum_{x\in\mathcal{X}} P(x) \log\left(\frac{P(x)}{Q(x)}\right) \)
+        \( \)
     </div>
 </div>
 
@@ -73,6 +75,22 @@
 <!-- Import core JavaScript -->
 <script src="vendor/jquery/jquery.slim.min.js"></script>
 <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+
+<script>
+    $(document).ready(function() {
+        $(document).mousedown(function(e) {
+            if (e.which === 1) {
+                ++mouseDown;
+            }
+        });
+        $(document).mouseup(function(e) {
+            if (e.which === 1) {
+                --mouseDown;
+            }
+        });
+    });
+</script>
 </body>
 
 </html>
