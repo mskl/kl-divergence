@@ -55,10 +55,10 @@ svg.selectAll(".backBar")
         console.log(y.invert(d3.mouse(d3.event.currentTarget)[1]));
         updateKLDivergence();
         if (selected === "P") {
-            pData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1])+0.5);
+            pData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
             drawBarChart("P");
         } else {
-            qData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1])+0.5);
+            qData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
             drawBarChart("Q");
         }
     })
@@ -66,10 +66,10 @@ svg.selectAll(".backBar")
         if (mouseDown) {
             updateKLDivergence();
             if (selected === "P") {
-                pData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1])+0.5);
+                pData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
                 drawBarChart("P");
             } else {
-                qData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1])+0.5);
+                qData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
                 drawBarChart("Q");
             }
         }
@@ -150,10 +150,10 @@ function updateKLDivergence() {
     let pmarg = pvals.map(d=>d/psum);
     let qmarg = qvals.map(d=>d/qsum);
 
-    let klPQsum = -d3.sum(d3.zip(pmarg, qmarg).map(d=>d[0]*Math.log(d[1]/d[0])));
-    let klQPsum = -d3.sum(d3.zip(pmarg, qmarg).map(d=>d[1]*Math.log(d[0]/d[1])));
-    textGroupTextPQ.text("KL(P||Q) = " + Math.round(klPQsum*100000)/100000);
-    textGroupTextQP.text("KL(Q||P) = " + Math.round(klQPsum*100000)/100000);
+    let klPQsum = -d3.sum(d3.zip(pmarg, qmarg).map(d=>d[0] * Math.log(d[1]/d[0])));
+    let klQPsum = -d3.sum(d3.zip(pmarg, qmarg).map(d=>d[1] * Math.log(d[0]/d[1])));
+    textGroupTextPQ.text("KL(P||Q) = " + Math.round(klPQsum * 100000)/100000);
+    textGroupTextQP.text("KL(Q||P) = " + Math.round(klQPsum * 100000)/100000);
 }
 
 updateKLDivergence();
