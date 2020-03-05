@@ -49,15 +49,13 @@ svg.selectAll(".backBar")
     .attr("y", y(1))
     .attr("height", height - y(d3.max(pValues)))
     .on("click", d => {
-        if (mouseDown) {
-            updateKLDivergence();
-            if (selected === "P") {
-                pData[d[0]][1] = y.invert(d3.mouse(d3.event.currentTarget)[1]);
-                drawBarChart("P");
-            } else {
-                qData[d[0]][1] = y.invert(d3.mouse(d3.event.currentTarget)[1]);
-                drawBarChart("Q");
-            }
+        updateKLDivergence();
+        if (selected === "P") {
+            pData[d[0]][1] = y.invert(d3.mouse(d3.event.currentTarget)[1]);
+            drawBarChart("P");
+        } else {
+            qData[d[0]][1] = y.invert(d3.mouse(d3.event.currentTarget)[1]);
+            drawBarChart("Q");
         }
     })
     .on("mousemove", d => {
@@ -134,9 +132,9 @@ buttonLabel.attr("class", "noselect")
     .attr("transform", "translate(" + 20 + ", " + 22 + ")");
 
 
-
-textGroup = svg.append("g").attr("transform", "translate(" + 0 + "," + (height-60)  + ")");
-textGroupText = textGroup.append("text").attr("class", "noselect").attr("transform", "translate(20, 30)").text("DKL(P||Q)=");
+textGroup = svg.append("g").attr("transform", "translate(" + 0 + "," + (height-40)  + ")");
+textGroupTextPQ = textGroup.append("text").attr("class", "noselect").attr("transform", "translate(20, 0)").text("KL(P||Q)=");
+textGroupTextQP = textGroup.append("text").attr("class", "noselect").attr("transform", "translate(20, 20)").text("KL(Q||P)=");
 
 function updateKLDivergence() {
     let pvals = pData.map(d=>d[1]);
@@ -148,19 +146,13 @@ function updateKLDivergence() {
     let pmarg = pvals.map(d=>d/psum);
     let qmarg = qvals.map(d=>d/qsum);
 
-    let klres = d3.zip(pmarg, qmarg).map(d=>d[0]*Math.log(d[1]/d[0]));
-    let klsum = -d3.sum(klres);
-    textGroupText.text("KL(P||Q) = " + klsum);
-
-    // var math = MathJax.Hub.getAllJax("bottomText")[1];
-    // MathJax.Hub.Queue(["Text",math,"" +
-    // "\\displaystyle{ D_\\text{KL}(P \\parallel Q) = \\sum_{x\\in\\mathcal{X}} P(x) " +
-    // "\\log\\left(\\frac{P(x)}{Q(x)}\\right) = " + klsum + " }"]);
-    // MathJax.Hub.Queue(["Text", math, klsum]);
+    let klPQsum = -d3.sum(d3.zip(pmarg, qmarg).map(d=>d[0]*Math.log(d[1]/d[0])));
+    let klQPsum = -d3.sum(d3.zip(pmarg, qmarg).map(d=>d[1]*Math.log(d[0]/d[1])));
+    textGroupTextPQ.text("KL(P||Q) = " + Math.round(klPQsum*100000)/100000);
+    textGroupTextQP.text("KL(Q||P) = " + Math.round(klQPsum*100000)/100000);
 }
 
 updateKLDivergence();
-
 
 // add the x Axis
 svg.append("g")
