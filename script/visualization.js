@@ -13,11 +13,11 @@ const header_size = document.querySelector("body > nav").clientHeight;
 const bottom_size = document.querySelector("#bottomText").clientHeight;
 const footer_size = document.querySelector("body > footer").clientHeight;
 
-document.querySelector("svg").style.width = window.innerWidth + "px";
-document.querySelector("svg").style.height = window.innerHeight / 1.618 - header_size + margin.top + margin.bottom + "px";
+document.querySelector("svg").style.width = "100%"; // window.innerWidth + "px";
+document.querySelector("svg").style.height = window.innerHeight / 1.718 - header_size + margin.top + margin.bottom + "px";
 
 let width = window.innerWidth - margin.left - margin.right;
-let height = (window.innerHeight) / 1.618 - header_size;
+let height = (window.innerHeight) / 1.718 - header_size;
 
 svg = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -26,35 +26,39 @@ let x = d3.scaleBand().range([0, width]).padding(0.13);
 let xNoPad = d3.scaleBand().range([0, width]);
 let y = d3.scaleLinear().range([height, 0]);
 
-const barCount = 42;
+const barCount = 10;
 xValues = d3.range(barCount);
-pValues = d3.range(1, barCount+1).sort(() => Math.random() - 0.5).map(d=>d/barCount);
-qValues = d3.range(1, barCount+1).sort(() => Math.random() - 0.5).map(d=>d/barCount);
+pValues = d3.range(1, barCount+1); //.sort(() => Math.random() - 0.5);
+qValues = d3.range(1, barCount+1).reverse(); //.sort(() => Math.random() - 0.5);
+
+let maxVal = 10;
 
 // Scale the range of the data in the domains
 x.domain(xValues);
 xNoPad.domain(xValues);
-y.domain([0, 1]);
+y.domain([0, maxVal]);
 pData = d3.zip(xValues, pValues);
 qData = d3.zip(xValues, qValues);
 
 // Back chart only to register the mouse clicks
 svg.selectAll(".backBar")
     .data(pData)
-    .enter().append("rect")
+    .enter()
+    .append("rect")
     .attr("class", "backBar")
     .attr("fill", "white")
     .attr("x", d => xNoPad(d[0]))
     .attr("width", xNoPad.bandwidth())
-    .attr("y", y(1))
-    .attr("height", height - y(d3.max(pValues)))
+    .attr("y", y(maxVal))
+    .attr("height", height - y(maxVal))
     .on("click", d => {
+        console.log(y.invert(d3.mouse(d3.event.currentTarget)[1]));
         updateKLDivergence();
         if (selected === "P") {
-            pData[d[0]][1] = y.invert(d3.mouse(d3.event.currentTarget)[1]);
+            pData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1])+0.5);
             drawBarChart("P");
         } else {
-            qData[d[0]][1] = y.invert(d3.mouse(d3.event.currentTarget)[1]);
+            qData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1])+0.5);
             drawBarChart("Q");
         }
     })
@@ -62,10 +66,10 @@ svg.selectAll(".backBar")
         if (mouseDown) {
             updateKLDivergence();
             if (selected === "P") {
-                pData[d[0]][1] = y.invert(d3.mouse(d3.event.currentTarget)[1]);
+                pData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1])+0.5);
                 drawBarChart("P");
             } else {
-                qData[d[0]][1] = y.invert(d3.mouse(d3.event.currentTarget)[1]);
+                qData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1])+0.5);
                 drawBarChart("Q");
             }
         }
