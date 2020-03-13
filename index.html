@@ -54,16 +54,16 @@
 
 <!-- Page Content -->
 <div class="container-fluid">
-    <div class="row m-2">
+    <div class="row bg-light p-2">
 
         <div class="btn-group mr-2">
-            <button type="button" class="btn btn-danger" style="width:auto;">
+            <button id="selection_button" type="button" class="btn" onclick="buttonSelectClick()">
                 Selected P
             </button>
         </div>
 
         <div class="btn-group mr-2">
-            <button type="button" class="btn btn-danger" data-toggle="dropdown" style="width:auto;">
+            <button id="set_p_button" type="button" class="btn dropdown-toggle" data-toggle="dropdown" style="width:auto;">
                 Set P distribution
             </button>
             <div class="dropdown-menu">
@@ -71,7 +71,7 @@
                 <a class="dropdown-item" href="#">Another action</a>
                 <a class="dropdown-item" href="#">Something else here</a>
             </div>
-            <button type="button" class="btn btn-dark" data-toggle="dropdown" style="width:auto;">
+            <button id="set_q_button" type="button" class="btn dropdown-toggle" data-toggle="dropdown" style="width:auto;">
                 Set Q distribution
             </button>
             <div class="dropdown-menu">
@@ -94,7 +94,7 @@
 
         <label for="max-value-input" class="col-form-label">Max value:</label>
         <div class="col-sm-1">
-            <input class="form-control" type="number" value="42" min="1" id="max-value-input">
+            <input class="form-control" type="number" value="10" min="1" id="max-value-input">
         </div>
     </div>
     <div class="row justify-content-center">

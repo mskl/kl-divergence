@@ -13,11 +13,11 @@ const header_size = document.querySelector("body > nav").clientHeight;
 const bottom_size = document.querySelector("#bottomText").clientHeight;
 const footer_size = document.querySelector("body > footer").clientHeight;
 
-document.querySelector("svg").style.width = "100%"; // window.innerWidth + "px";
-document.querySelector("svg").style.height = window.innerHeight / 1.718 - header_size + margin.top + margin.bottom + "px";
-
 let width = window.innerWidth - margin.left - margin.right;
-let height = (window.innerHeight) / 1.718 - header_size;
+let height = (window.innerHeight) / 1.314 - header_size;
+
+document.querySelector("svg").style.width = "100%"; // window.innerWidth + "px";
+document.querySelector("svg").style.height = window.innerHeight / 1.314 - header_size + margin.top + margin.bottom + "px";
 
 svg = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -110,31 +110,22 @@ drawBarChart("P");
 drawBarChart("Q");
 
 let selected = "P";
-buttonGroup = svg.append("g").attr("transform", "translate(" + 10 + "," + 10 + ")");
-buttonRect = buttonGroup.append("rect")
-    .attr("class", "button")
-    .attr("width", 120)
-    .attr("fill", pColor)
-    .attr("opacity", 0.8)
-    .attr("height", 30)
-    .attr("rx", 2)
-    .attr("ry", 2)
-    .on("click", function () {
-        if (selected === "P") {
-            buttonRect.style("fill", qColor);
-            selected = "Q";
-        } else {
-            buttonRect.style("fill", pColor);
-            selected = "P";
-        }
-        buttonLabel.text("Selected " + selected);
-    });
+let buttonObject = document.querySelector("#selection_button");
+buttonObject.style.background = pColor;
 
-buttonLabel = buttonGroup.append("text").text("Selected P");
-buttonLabel.attr("class", "noselect")
-    .attr("pointer-events", "none")
-    .attr("transform", "translate(" + 20 + ", " + 22 + ")");
+function buttonSelectClick() {
+    if (selected === "P"){
+        selected = "Q";
+        buttonObject.style.background = qColor;
+    } else {
+        selected = "P";
+        buttonObject.style.background = pColor;
+    }
+    buttonObject.textContent = "Selected " + selected;
+}
 
+document.querySelector("#set_p_button").style.background = pColor;
+document.querySelector("#set_q_button").style.background = qColor;
 
 textGroup = svg.append("g").attr("transform", "translate(" + 0 + "," + (height-40)  + ")");
 textGroupTextPQ = textGroup.append("text").attr("class", "noselect").attr("transform", "translate(20, 0)").text("KL(P||Q)=");
