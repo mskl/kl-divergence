@@ -2,8 +2,8 @@ var mouseDown = 0;
 // document.body.onmousedown = d => ++mouseDown;
 // document.body.onmouseup = d => --mouseDown;
 
-pColor = "#A7E8BD";
-qColor = "#FCBCB8";
+let pColor = "#A7E8BD";
+let qColor = "#FCBCB8";
 
 // set the dimensions and margins of the graph
 let svg = d3.select("svg");
@@ -27,18 +27,33 @@ let xNoPad = d3.scaleBand().range([0, width]);
 let y = d3.scaleLinear().range([height, 0]);
 
 const barCount = 10;
-xValues = d3.range(barCount);
-pValues = d3.range(1, barCount+1); //.sort(() => Math.random() - 0.5);
-qValues = d3.range(1, barCount+1).reverse(); //.sort(() => Math.random() - 0.5);
+let xValues = d3.range(barCount);
+let pValues = d3.range(1, barCount+1); //.sort(() => Math.random() - 0.5);
+let qValues = d3.range(1, barCount+1).reverse(); //.sort(() => Math.random() - 0.5);
 
 let maxVal = 10;
+let pData = null;
+let qData = null;
 
-// Scale the range of the data in the domains
-x.domain(xValues);
-xNoPad.domain(xValues);
-y.domain([0, maxVal]);
-pData = d3.zip(xValues, pValues);
-qData = d3.zip(xValues, qValues);
+function regenerateData(new_maxval) {
+    maxVal = new_maxval;
+    const prev = pData;
+
+    // Scale the range of the data in the domains
+    x.domain(xValues);
+    xNoPad.domain(xValues);
+    y.domain([0, maxVal]);
+    pData = d3.zip(xValues, pValues);
+    qData = d3.zip(xValues, qValues);
+
+    // TODO: refractor this weird hack
+    if (prev !== null) {
+        drawBarChart("P");
+        drawBarChart("Q");
+    }
+
+    regenerateAxis();
+} regenerateData(maxVal);
 
 // Back chart only to register the mouse clicks
 svg.selectAll(".backBar")
@@ -52,7 +67,6 @@ svg.selectAll(".backBar")
     .attr("y", y(maxVal))
     .attr("height", height - y(maxVal))
     .on("click", d => {
-        console.log(y.invert(d3.mouse(d3.event.currentTarget)[1]));
         updateKLDivergence();
         if (selected === "P") {
             pData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
@@ -75,13 +89,13 @@ svg.selectAll(".backBar")
         }
     });
 
-make_y_gridlines = d => d3.axisLeft(y).ticks(barCount);
-svg.append("g")
-    .attr("class", "grid")
-    .call(make_y_gridlines()
-        .tickSize(-width)
-        .tickFormat("")
-    );
+// make_y_gridlines = d => d3.axisLeft(y).ticks(barCount);
+// svg.append("g")
+//     .attr("class", "grid")
+//     .call(make_y_gridlines()
+//         .tickSize(-width)
+//         .tickFormat("")
+//     );
 
 function drawBarChart(sel) {
     let className = sel === "P" ? "barP" : "barQ";
@@ -149,15 +163,25 @@ function updateKLDivergence() {
 
 updateKLDivergence();
 
-// add the x Axis
-svg.append("g")
-    .attr("class", "noselect")
-    .attr("pointer-events", "none")
-    .attr("transform", "translate(0," + (height) + ")")
-    .call(d3.axisBottom(x));
 
-// add the y Axis
-svg.append("g")
-    .attr("class", "noselect")
-    .attr("pointer-events", "none")
-    .call(d3.axisLeft(y));
+function regenerateAxis() {
+    // Remove the existing axis TODO: animate?
+    let ax = document.querySelector("#axis");
+    if (ax) ax.remove();
+
+    // Add the new axis
+    let axis = svg.append("g").attr("id", "axis");
+    axis.append("g")
+        .attr("class", "noselect")
+        .attr("pointer-events", "none")
+        .attr("transform", "translate(0," + (height) + ")")
+        .call(d3.axisBottom(x));
+    axis.append("g")
+        .attr("class", "noselect")
+        .attr("pointer-events", "none")
+        .call(d3.axisLeft(y));
+}
+
+function numberElementsChanged() {
+    regenerateData(document.querySelector("#max-value-input").value);
+}

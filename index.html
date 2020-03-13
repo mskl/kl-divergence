@@ -57,7 +57,7 @@
     <div class="row bg-light p-2">
 
         <div class="btn-group mr-2">
-            <button id="selection_button" type="button" class="btn" onclick="buttonSelectClick()">
+            <button id="selection_button" type="button" class="btn border-light" onclick="buttonSelectClick()">
                 Selected P
             </button>
         </div>
@@ -94,7 +94,7 @@
 
         <label for="max-value-input" class="col-form-label">Max value:</label>
         <div class="col-sm-1">
-            <input class="form-control" type="number" value="10" min="1" id="max-value-input">
+            <input class="form-control" type="number" value="10" min="1" id="max-value-input" onchange="numberElementsChanged()">
         </div>
     </div>
     <div class="row justify-content-center">
