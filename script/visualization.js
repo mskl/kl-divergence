@@ -26,18 +26,25 @@ let x = d3.scaleBand().range([0, width]).padding(0.13);
 let xNoPad = d3.scaleBand().range([0, width]);
 let y = d3.scaleLinear().range([height, 0]);
 
-const barCount = 10;
-let xValues = d3.range(barCount);
-let pValues = d3.range(1, barCount+1); //.sort(() => Math.random() - 0.5);
-let qValues = d3.range(1, barCount+1).reverse(); //.sort(() => Math.random() - 0.5);
-
+let barCount = 8;
 let maxVal = 10;
+
+let xValues = null;
+let pValues = null;
+let qValues = null;
+
 let pData = null;
 let qData = null;
 
-function regenerateData(new_maxval) {
+function regenerateData(new_maxval, new_barcount) {
+    barCount = new_barcount;
     maxVal = new_maxval;
+
     const prev = pData;
+
+    xValues = d3.range(barCount);
+    pValues = d3.range(1, barCount+1); //.sort(() => Math.random() - 0.5);
+    qValues = d3.range(1, barCount+1).reverse(); //.sort(() => Math.random() - 0.5);
 
     // Scale the range of the data in the domains
     x.domain(xValues);
@@ -48,36 +55,32 @@ function regenerateData(new_maxval) {
 
     // TODO: refractor this weird hack
     if (prev !== null) {
+        svg.selectAll(".backBar").remove();
+        svg.selectAll(".barP").remove();
+        svg.selectAll(".barQ").remove();
+
+        drawBackBars();
+
         drawBarChart("P");
         drawBarChart("Q");
     }
 
     regenerateAxis();
-} regenerateData(maxVal);
 
-// Back chart only to register the mouse clicks
-svg.selectAll(".backBar")
-    .data(pData)
-    .enter()
-    .append("rect")
-    .attr("class", "backBar")
-    .attr("fill", "white")
-    .attr("x", d => xNoPad(d[0]))
-    .attr("width", xNoPad.bandwidth())
-    .attr("y", y(maxVal))
-    .attr("height", height - y(maxVal))
-    .on("click", d => {
-        updateKLDivergence();
-        if (selected === "P") {
-            pData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
-            drawBarChart("P");
-        } else {
-            qData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
-            drawBarChart("Q");
-        }
-    })
-    .on("mousemove", d => {
-        if (mouseDown) {
+} regenerateData(maxVal, barCount);
+
+function drawBackBars() {
+    svg.selectAll(".backBar")
+        .data(pData)
+        .enter()
+        .append("rect")
+        .attr("class", "backBar")
+        .attr("fill", "transparent")
+        .attr("x", d => xNoPad(d[0]))
+        .attr("width", xNoPad.bandwidth())
+        .attr("y", y(maxVal))
+        .attr("height", height - y(maxVal))
+        .on("click", d => {
             updateKLDivergence();
             if (selected === "P") {
                 pData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
@@ -86,16 +89,21 @@ svg.selectAll(".backBar")
                 qData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
                 drawBarChart("Q");
             }
-        }
-    });
+        })
+        .on("mousemove", d => {
+            if (mouseDown) {
+                updateKLDivergence();
+                if (selected === "P") {
+                    pData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
+                    drawBarChart("P");
+                } else {
+                    qData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
+                    drawBarChart("Q");
+                }
+            }
+        });
+} drawBackBars();
 
-// make_y_gridlines = d => d3.axisLeft(y).ticks(barCount);
-// svg.append("g")
-//     .attr("class", "grid")
-//     .call(make_y_gridlines()
-//         .tickSize(-width)
-//         .tickFormat("")
-//     );
 
 function drawBarChart(sel) {
     let className = sel === "P" ? "barP" : "barQ";
@@ -183,5 +191,7 @@ function regenerateAxis() {
 }
 
 function numberElementsChanged() {
-    regenerateData(document.querySelector("#max-value-input").value);
+    let maxVal = document.querySelector("#max-value-input").value;
+    let barCount = document.querySelector("#bars-count-input").value;
+    regenerateData(maxVal, barCount);
 }
