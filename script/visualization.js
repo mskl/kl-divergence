@@ -1,5 +1,7 @@
-let mouseDown = 0;
+const pColor = "#A7E8BD";
+const qColor = "#FCBCB8";
 
+let mouseDown = 0;
 
 let svg = d3.select("svg");
 
@@ -11,10 +13,7 @@ const footer_size = document.querySelector("body > footer").clientHeight;
 let width = window.innerWidth - margin.left - margin.right;
 let height = (window.innerHeight) / 1.314 - header_size;
 
-const pColor = "#A7E8BD";
-const qColor = "#FCBCB8";
-
-document.querySelector("svg").style.width = "100%"; // window.innerWidth + "px";
+document.querySelector("svg").style.width = "100%";
 document.querySelector("svg").style.height = window.innerHeight / 1.314 - header_size + margin.top + margin.bottom + "px";
 transformedSVG = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -22,9 +21,6 @@ transformedSVG = svg.append("g").attr("transform", "translate(" + margin.left + 
 let xNoPad = d3.scaleBand().range([0, width]);
 let x = d3.scaleBand().range([0, width]).padding(0.13);
 let y = d3.scaleLinear().range([height, 0]);
-
-let barCount = 8;
-let maxVal = 10;
 
 let xValues = null;
 let pValues = null;
@@ -45,29 +41,27 @@ let chartGroup = null;
 let textGroupTextPQ = null;
 let textGroupTextQP = null;
 
-function regenerateData(new_maxval, new_barcount) {
-    barCount = new_barcount;
-    maxVal = new_maxval;
+let maxVal = null;
+let barCount = null;
 
-    xValues = d3.range(barCount);
+function regenerateData(mv, bc) {
+    maxVal = mv;
+    barCount = bc;
 
-    // Todo: make this better
-    pValues = d3.range(1, barCount+1);
-    qValues = d3.range(1, barCount+1).reverse(); //.sort(() => Math.random() - 0.5);
+    xValues = d3.range(bc);
+    pValues = d3.range(1, bc+1).map(d=>Math.round((d/(bc))*(mv)));
+    qValues = d3.range(1, bc+1).map(d=>Math.round((d/(bc))*(mv))).reverse();
 
-    // Scale the range of the data in the domains
-    xNoPad.domain(xValues);
     x.domain(xValues);
-    y.domain([0, maxVal]);
+    y.domain([0, mv]);
+    xNoPad.domain(xValues);
 
     pData = d3.zip(xValues, pValues);
     qData = d3.zip(xValues, qValues);
 
-    // If the chartgroup was not created yet, do it now
     if (chartGroup !== null) {
         chartGroup.remove();
     }
-
     chartGroup = transformedSVG.append("g");
 
     drawBackBars();
@@ -76,9 +70,30 @@ function regenerateData(new_maxval, new_barcount) {
     regenerateAxis();
     regenerateTextGroup();
     updateKLDivergence();
-} regenerateData(maxVal, barCount);
+}
+
+function numberElementsChanged() {
+    let mv = parseInt(document.querySelector("#max-value-input").value);
+    let bc = parseInt(document.querySelector("#bars-count-input").value);
+
+    console.log("mv \"" + mv + "\"");
+    console.log("bc \"" + bc + "\"");
+
+    regenerateData(mv, bc);
+} numberElementsChanged();
 
 function drawBackBars() {
+    function barClick(d) {
+        updateKLDivergence();
+        if (selected === "P") {
+            pData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
+            drawBarChart("P");
+        } else {
+            qData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
+            drawBarChart("Q");
+        }
+    }
+
     chartGroup.selectAll(".backBar")
         .data(pData)
         .enter()
@@ -90,25 +105,11 @@ function drawBackBars() {
         .attr("y", y(maxVal))
         .attr("height", height - y(maxVal))
         .on("click", d => {
-            updateKLDivergence();
-            if (selected === "P") {
-                pData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
-                drawBarChart("P");
-            } else {
-                qData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
-                drawBarChart("Q");
-            }
+            barClick(d);
         })
         .on("mousemove", d => {
             if (mouseDown) {
-                updateKLDivergence();
-                if (selected === "P") {
-                    pData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
-                    drawBarChart("P");
-                } else {
-                    qData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
-                    drawBarChart("Q");
-                }
+                barClick(d);
             }
         });
 }
@@ -137,6 +138,7 @@ function drawBarChart(sel) {
         .attr("pointer-events", "none")
 }
 
+
 function buttonSelectClick() {
     if (selected === "P"){
         selected = "Q";
@@ -147,6 +149,7 @@ function buttonSelectClick() {
     }
     buttonObject.textContent = "Selected " + selected;
 }
+
 
 function regenerateTextGroup() {
     if (textGroup !== null) {
@@ -169,11 +172,22 @@ function updateKLDivergence() {
     let pmarg = pvals.map(d=>d/psum);
     let qmarg = qvals.map(d=>d/qsum);
 
-    let klPQsum = -d3.sum(d3.zip(pmarg, qmarg).map(d=>d[0] * Math.log(d[1]/d[0])));
-    let klQPsum = -d3.sum(d3.zip(pmarg, qmarg).map(d=>d[1] * Math.log(d[0]/d[1])));
+    let klDivergence = (p, q) => {
+        if (p === 0 && q === 0)
+            return 0;
+        else if (p === 0)
+            return 0;
+        else if (q === 0)
+            return Infinity;
+        return p * Math.log(p/q);
+    };
+
+    let klPQsum = d3.sum(d3.zip(pmarg, qmarg).map(d=>klDivergence(d[0], d[1])));
+    let klQPsum = d3.sum(d3.zip(pmarg, qmarg).map(d=>klDivergence(d[1], d[0])));
     textGroupTextPQ.text("KL(P||Q) = " + Math.round(klPQsum * 100000)/100000);
     textGroupTextQP.text("KL(Q||P) = " + Math.round(klQPsum * 100000)/100000);
 }
+
 
 function regenerateAxis() {
     // Remove the existing axis TODO: animate?
@@ -193,10 +207,4 @@ function regenerateAxis() {
         .attr("class", "noselect")
         .attr("pointer-events", "none")
         .call(d3.axisLeft(y));
-}
-
-function numberElementsChanged() {
-    let maxVal = document.querySelector("#max-value-input").value;
-    let barCount = document.querySelector("#bars-count-input").value;
-    regenerateData(maxVal, barCount);
 }
