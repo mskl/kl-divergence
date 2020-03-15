@@ -2,7 +2,6 @@ const pColor = "#A7E8BD";
 const qColor = "#FCBCB8";
 
 let mouseDown = 0;
-
 let svg = d3.select("svg");
 
 const margin = {top: 20, right: 20, bottom: 20, left: 40};
@@ -29,7 +28,7 @@ let qValues = null;
 let pData = null;
 let qData = null;
 
-let selected = "P";
+let selectedDistribution = "P";
 let buttonObject = document.querySelector("#selection_button");
 buttonObject.style.background = pColor;
 
@@ -45,12 +44,9 @@ let maxVal = null;
 let barCount = null;
 
 function regenerateData(mv, bc) {
-    maxVal = mv;
-    barCount = bc;
-
     xValues = d3.range(bc);
-    pValues = d3.range(1, bc+1).map(d=>Math.round((d/(bc))*(mv)));
-    qValues = d3.range(1, bc+1).map(d=>Math.round((d/(bc))*(mv))).reverse();
+    pValues = d3.range(1, bc+1).map(d=>Math.max(Math.round((d/(bc))*(mv)), 1));
+    qValues = d3.range(1, bc+1).map(d=>Math.max(Math.round((d/(bc))*(mv)), 1)).reverse();
 
     x.domain(xValues);
     y.domain([0, mv]);
@@ -59,10 +55,12 @@ function regenerateData(mv, bc) {
     pData = d3.zip(xValues, pValues);
     qData = d3.zip(xValues, qValues);
 
-    if (chartGroup !== null) {
-        chartGroup.remove();
-    }
+    if (chartGroup) chartGroup.remove();
     chartGroup = transformedSVG.append("g");
+
+    // Save the global variables
+    maxVal = mv;
+    barCount = bc;
 
     drawBackBars();
     drawBarChart("P");
@@ -80,23 +78,26 @@ function numberElementsChanged() {
     console.log("bc \"" + bc + "\"");
 
     regenerateData(mv, bc);
-} numberElementsChanged();
+}
+
+// IMPORTANT: Draws the whole chart
+numberElementsChanged();
 
 function drawBackBars() {
     function barClick(d) {
         updateKLDivergence();
-        if (selected === "P") {
+        if (selectedDistribution === "P") {
             pData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
-            drawBarChart("P");
         } else {
             qData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
-            drawBarChart("Q");
         }
+
+        drawBarChart("P");
+        drawBarChart("Q");
     }
 
     chartGroup.selectAll(".backBar")
-        .data(pData)
-        .enter()
+        .data(pData).enter()
         .append("rect")
         .attr("class", "backBar")
         .attr("fill", "transparent")
@@ -130,32 +131,37 @@ function drawBarChart(sel) {
     bars.enter().append("rect")
         .attr("class",  className)
         .attr("opacity", 0.7)
+        .attr("stroke-width", "1.5px")
         .attr("fill", classColor)
         .attr("x", d => x(d[0]))
         .attr("width", x.bandwidth())
         .attr("y", d => y(d[1]))
         .attr("height", d => height - y(d[1]))
         .attr("pointer-events", "none")
+        .attr("stroke", d => sel === selectedDistribution ? "rgba(0,0,0,0.5)" : "transparent");
+
+    bars.attr("stroke", d => sel === selectedDistribution ? "rgba(0,0,0,0.5)" : "transparent");
 }
 
 
 function buttonSelectClick() {
-    if (selected === "P"){
-        selected = "Q";
+    if (selectedDistribution === "P"){
+        selectedDistribution = "Q";
         buttonObject.style.background = qColor;
     } else {
-        selected = "P";
+        selectedDistribution = "P";
         buttonObject.style.background = pColor;
     }
-    buttonObject.textContent = "Selected " + selected;
+
+    buttonObject.textContent = "Selected " + selectedDistribution;
+
+    drawBarChart("P");
+    drawBarChart("Q");
 }
 
 
 function regenerateTextGroup() {
-    if (textGroup !== null) {
-        textGroup.remove();
-    }
-
+    if (textGroup) textGroup.remove();
     textGroup = transformedSVG.append("g").attr("transform", "translate(" + 0 + "," + (height-40)  + ")");
     textGroupTextPQ = textGroup.append("text").attr("class", "noselect").attr("transform", "translate(20, 0)").text("KL(P||Q)=");
     textGroupTextQP = textGroup.append("text").attr("class", "noselect").attr("transform", "translate(20, 20)").text("KL(Q||P)=");
@@ -190,11 +196,9 @@ function updateKLDivergence() {
 
 
 function regenerateAxis() {
-    // Remove the existing axis TODO: animate?
+    // Remove the existing axis
     let ax = document.querySelector("#axis");
-    if (ax !== null) {
-        ax.remove();
-    }
+    if (ax) ax.remove();
 
     // Add the new axis
     let axis = transformedSVG.append("g").attr("id", "axis");
