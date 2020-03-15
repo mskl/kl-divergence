@@ -58,10 +58,6 @@ function regenerateData(mv, bc) {
     if (chartGroup) chartGroup.remove();
     chartGroup = transformedSVG.append("g");
 
-    // Save the global variables
-    maxVal = mv;
-    barCount = bc;
-
     drawBackBars();
     drawBarChart("P");
     drawBarChart("Q");
@@ -71,13 +67,10 @@ function regenerateData(mv, bc) {
 }
 
 function numberElementsChanged() {
-    let mv = parseInt(document.querySelector("#max-value-input").value);
-    let bc = parseInt(document.querySelector("#bars-count-input").value);
+    maxVal = parseInt(document.querySelector("#max-value-input").value);
+    barCount = parseInt(document.querySelector("#bars-count-input").value);
 
-    console.log("mv \"" + mv + "\"");
-    console.log("bc \"" + bc + "\"");
-
-    regenerateData(mv, bc);
+    regenerateData(maxVal, barCount);
 }
 
 // IMPORTANT: Draws the whole chart
@@ -131,16 +124,16 @@ function drawBarChart(sel) {
     bars.enter().append("rect")
         .attr("class",  className)
         .attr("opacity", 0.7)
-        .attr("stroke-width", "1.5px")
+        .attr("stroke-width", "1px")
         .attr("fill", classColor)
         .attr("x", d => x(d[0]))
         .attr("width", x.bandwidth())
         .attr("y", d => y(d[1]))
         .attr("height", d => height - y(d[1]))
         .attr("pointer-events", "none")
+        .merge(bars)
         .attr("stroke", d => sel === selectedDistribution ? "rgba(0,0,0,0.5)" : "transparent");
 
-    bars.attr("stroke", d => sel === selectedDistribution ? "rgba(0,0,0,0.5)" : "transparent");
 }
 
 
