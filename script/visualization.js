@@ -4,6 +4,8 @@ const qColor = "#FCBCB8";
 let mouseDown = 0;
 let svg = d3.select("svg");
 
+let tip = d3.tip().attr("class", "tip").html((d, i) => klDivergence(pData[i][1], qData[i][1]));
+
 const margin = {top: 20, right: 20, bottom: 20, left: 40};
 const header_size = document.querySelector("body > nav").clientHeight;
 const bottom_size = document.querySelector("#bottomText").clientHeight;
@@ -77,7 +79,7 @@ function numberElementsChanged() {
 numberElementsChanged();
 
 function drawBackBars() {
-    function barClick(d) {
+    function barClick(d, i) {
         updateKLDivergence();
         if (selectedDistribution === "P") {
             pData[d[0]][1] = Math.round(y.invert(d3.mouse(d3.event.currentTarget)[1]));
@@ -87,7 +89,11 @@ function drawBackBars() {
 
         drawBarChart("P");
         drawBarChart("Q");
+
+        document.querySelector("div.tip").textContent = klDivergence(pData[i][1], qData[i][1]);
     }
+
+    chartGroup.call(tip);
 
     chartGroup.selectAll(".backBar")
         .data(pData).enter()
@@ -98,14 +104,16 @@ function drawBackBars() {
         .attr("width", xNoPad.bandwidth())
         .attr("y", y(maxVal))
         .attr("height", height - y(maxVal))
-        .on("click", d => {
-            barClick(d);
+        .on("click", (d, i) => {
+            barClick(d, i);
         })
-        .on("mousemove", d => {
+        .on("mousemove", (d, i) => {
             if (mouseDown) {
-                barClick(d);
+                barClick(d, i);
             }
-        });
+        })
+        .on('mouseover', tip.show)
+        .on('mouseout', tip.hide);
 }
 
 
@@ -156,10 +164,21 @@ function buttonSelectClick() {
 function regenerateTextGroup() {
     if (textGroup) textGroup.remove();
     textGroup = transformedSVG.append("g").attr("transform", "translate(" + 0 + "," + (height-40)  + ")");
-    textGroupTextPQ = textGroup.append("text").attr("class", "noselect").attr("transform", "translate(20, 0)").text("KL(P||Q)=");
-    textGroupTextQP = textGroup.append("text").attr("class", "noselect").attr("transform", "translate(20, 20)").text("KL(Q||P)=");
+    textGroupTextPQ = textGroup.append("text").attr("class", "noselect")
+        .attr("transform", "translate(20, 0)").text("KL(P||Q)=");
+    textGroupTextQP = textGroup.append("text").attr("class", "noselect")
+        .attr("transform", "translate(20, 20)").text("KL(Q||P)=");
 }
 
+function klDivergence(p, q){
+    if (p === 0 && q === 0)
+        return 0;
+    else if (p === 0)
+        return 0;
+    else if (q === 0)
+        return Infinity;
+    return p * Math.log(p/q);
+}
 
 function updateKLDivergence() {
     let pvals = pData.map(d=>d[1]);
@@ -170,16 +189,6 @@ function updateKLDivergence() {
 
     let pmarg = pvals.map(d=>d/psum);
     let qmarg = qvals.map(d=>d/qsum);
-
-    let klDivergence = (p, q) => {
-        if (p === 0 && q === 0)
-            return 0;
-        else if (p === 0)
-            return 0;
-        else if (q === 0)
-            return Infinity;
-        return p * Math.log(p/q);
-    };
 
     let klPQsum = d3.sum(d3.zip(pmarg, qmarg).map(d=>klDivergence(d[0], d[1])));
     let klQPsum = d3.sum(d3.zip(pmarg, qmarg).map(d=>klDivergence(d[1], d[0])));
