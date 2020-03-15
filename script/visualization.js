@@ -1,11 +1,6 @@
-var mouseDown = 0;
-// document.body.onmousedown = d => ++mouseDown;
-// document.body.onmouseup = d => --mouseDown;
+let mouseDown = 0;
 
-let pColor = "#A7E8BD";
-let qColor = "#FCBCB8";
 
-// set the dimensions and margins of the graph
 let svg = d3.select("svg");
 
 const margin = {top: 20, right: 20, bottom: 20, left: 40};
@@ -16,14 +11,16 @@ const footer_size = document.querySelector("body > footer").clientHeight;
 let width = window.innerWidth - margin.left - margin.right;
 let height = (window.innerHeight) / 1.314 - header_size;
 
+const pColor = "#A7E8BD";
+const qColor = "#FCBCB8";
+
 document.querySelector("svg").style.width = "100%"; // window.innerWidth + "px";
 document.querySelector("svg").style.height = window.innerHeight / 1.314 - header_size + margin.top + margin.bottom + "px";
-
-svg = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+transformedSVG = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 // set the ranges
-let x = d3.scaleBand().range([0, width]).padding(0.13);
 let xNoPad = d3.scaleBand().range([0, width]);
+let x = d3.scaleBand().range([0, width]).padding(0.13);
 let y = d3.scaleLinear().range([height, 0]);
 
 let barCount = 8;
@@ -36,41 +33,53 @@ let qValues = null;
 let pData = null;
 let qData = null;
 
+let selected = "P";
+let buttonObject = document.querySelector("#selection_button");
+buttonObject.style.background = pColor;
+
+document.querySelector("#set_p_button").style.background = pColor;
+document.querySelector("#set_q_button").style.background = qColor;
+
+let textGroup = null;
+let chartGroup = null;
+let textGroupTextPQ = null;
+let textGroupTextQP = null;
+
 function regenerateData(new_maxval, new_barcount) {
     barCount = new_barcount;
     maxVal = new_maxval;
 
-    const prev = pData;
-
     xValues = d3.range(barCount);
-    pValues = d3.range(1, barCount+1); //.sort(() => Math.random() - 0.5);
+
+    // Todo: make this better
+    pValues = d3.range(1, barCount+1);
     qValues = d3.range(1, barCount+1).reverse(); //.sort(() => Math.random() - 0.5);
 
     // Scale the range of the data in the domains
-    x.domain(xValues);
     xNoPad.domain(xValues);
+    x.domain(xValues);
     y.domain([0, maxVal]);
+
     pData = d3.zip(xValues, pValues);
     qData = d3.zip(xValues, qValues);
 
-    // TODO: refractor this weird hack
-    if (prev !== null) {
-        svg.selectAll(".backBar").remove();
-        svg.selectAll(".barP").remove();
-        svg.selectAll(".barQ").remove();
-
-        drawBackBars();
-
-        drawBarChart("P");
-        drawBarChart("Q");
+    // If the chartgroup was not created yet, do it now
+    if (chartGroup !== null) {
+        chartGroup.remove();
     }
 
-    regenerateAxis();
+    chartGroup = transformedSVG.append("g");
 
+    drawBackBars();
+    drawBarChart("P");
+    drawBarChart("Q");
+    regenerateAxis();
+    regenerateTextGroup();
+    updateKLDivergence();
 } regenerateData(maxVal, barCount);
 
 function drawBackBars() {
-    svg.selectAll(".backBar")
+    chartGroup.selectAll(".backBar")
         .data(pData)
         .enter()
         .append("rect")
@@ -102,7 +111,7 @@ function drawBackBars() {
                 }
             }
         });
-} drawBackBars();
+}
 
 
 function drawBarChart(sel) {
@@ -110,7 +119,7 @@ function drawBarChart(sel) {
     let classData = sel === "P" ? pData : qData;
     let classColor = sel === "P" ? pColor : qColor;
 
-    let bars = svg.selectAll("."+className).data(classData);
+    let bars = chartGroup.selectAll("."+className).data(classData);
 
     bars.transition()
         .duration(40)
@@ -128,13 +137,6 @@ function drawBarChart(sel) {
         .attr("pointer-events", "none")
 }
 
-drawBarChart("P");
-drawBarChart("Q");
-
-let selected = "P";
-let buttonObject = document.querySelector("#selection_button");
-buttonObject.style.background = pColor;
-
 function buttonSelectClick() {
     if (selected === "P"){
         selected = "Q";
@@ -146,12 +148,16 @@ function buttonSelectClick() {
     buttonObject.textContent = "Selected " + selected;
 }
 
-document.querySelector("#set_p_button").style.background = pColor;
-document.querySelector("#set_q_button").style.background = qColor;
+function regenerateTextGroup() {
+    if (textGroup !== null) {
+        textGroup.remove();
+    }
 
-textGroup = svg.append("g").attr("transform", "translate(" + 0 + "," + (height-40)  + ")");
-textGroupTextPQ = textGroup.append("text").attr("class", "noselect").attr("transform", "translate(20, 0)").text("KL(P||Q)=");
-textGroupTextQP = textGroup.append("text").attr("class", "noselect").attr("transform", "translate(20, 20)").text("KL(Q||P)=");
+    textGroup = transformedSVG.append("g").attr("transform", "translate(" + 0 + "," + (height-40)  + ")");
+    textGroupTextPQ = textGroup.append("text").attr("class", "noselect").attr("transform", "translate(20, 0)").text("KL(P||Q)=");
+    textGroupTextQP = textGroup.append("text").attr("class", "noselect").attr("transform", "translate(20, 20)").text("KL(Q||P)=");
+}
+
 
 function updateKLDivergence() {
     let pvals = pData.map(d=>d[1]);
@@ -169,16 +175,15 @@ function updateKLDivergence() {
     textGroupTextQP.text("KL(Q||P) = " + Math.round(klQPsum * 100000)/100000);
 }
 
-updateKLDivergence();
-
-
 function regenerateAxis() {
     // Remove the existing axis TODO: animate?
     let ax = document.querySelector("#axis");
-    if (ax) ax.remove();
+    if (ax !== null) {
+        ax.remove();
+    }
 
     // Add the new axis
-    let axis = svg.append("g").attr("id", "axis");
+    let axis = transformedSVG.append("g").attr("id", "axis");
     axis.append("g")
         .attr("class", "noselect")
         .attr("pointer-events", "none")
