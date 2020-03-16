@@ -4,8 +4,29 @@ const qColor = "#A7E8BD";
 let mouseDown = 0;
 let svg = d3.select("svg");
 
-printTooltip = (d, i) => klDivergence(pData[i][1], qData[i][1]).toFixed(5);
-let tip = d3.tip().attr("class", "d3-tip").html((d, i) => printTooltip(d, i));
+printTooltip = (d, i) => {
+    let pSum = d3.sum(pData.map(d=>d[1]));
+    let qSum = d3.sum(qData.map(d=>d[1]));
+
+    let pdiv = klDivergence(pData[i][1] / pSum, qData[i][1] / qSum);
+    let qdiv = klDivergence(qData[i][1] / qSum, pData[i][1] / pSum);
+
+    let pspace = "";
+    let qspace = "";
+
+    if (Math.sign(pdiv) >= 0) {
+        pspace = " ";
+    }
+    if (Math.sign(qdiv) >= 0) {
+        qspace = " ";
+    }
+
+    return "p: " + (pData[i][1] / pSum).toFixed(2) + ", q: " + (qData[i][1] / qSum).toFixed(2)
+        + "<br>" + "p×log(p/q):" + pspace + pdiv.toFixed(2)
+        + "<br>" + "q×log(q/p):" + qspace + qdiv.toFixed(2);
+};
+
+let tip = d3.tip().attr("class", "text-monospace").attr("class", "d3-tip").html((d, i) => printTooltip(d, i));
 
 const margin = {top: 20, right: 20, bottom: 20, left: 40};
 const header_size = document.querySelector("body > nav").clientHeight;
@@ -54,8 +75,8 @@ function regenerateData(mv, bc) {
 
     if (changingBars) {
         xValues = d3.range(bc);
-        pValues = d3.range(1, bc+1).map(d=>Math.max(Math.round((d/(bc))*(mv)), 1));
-        qValues = d3.range(1, bc+1).map(d=>Math.max(Math.round((d/(bc))*(mv)), 1)).reverse();
+        pValues = d3.range(1, bc+1).map(d=>Math.max(Math.round((d/(bc))*(mv-1)), 1));
+        qValues = d3.range(1, bc+1).map(d=>Math.max(Math.round((d/(bc))*(mv-1)), 1)).reverse();
 
         xNoPad.domain(xValues);
         x.domain(xValues);
@@ -90,7 +111,7 @@ function numberElementsChanged() {
     regenerateData(mv, bc);
 }
 
-// IMPORTANT: Draws the whole chart
+// IMPORTANT: Initially draws the whole chart
 numberElementsChanged();
 
 function drawBackBars() {
@@ -105,7 +126,7 @@ function drawBackBars() {
         drawBarChart("P");
         drawBarChart("Q");
 
-        document.querySelector("div.d3-tip").textContent = printTooltip(d, i);
+        document.querySelector("div.d3-tip").innerHTML = printTooltip(d, i);
     }
 
     chartGroup.call(tip);
@@ -185,6 +206,7 @@ function regenerateTextGroup() {
         .attr("transform", "translate(20, 20)").text("KL(Q||P)=");
 }
 
+
 function klDivergence(p, q){
     if (p === 0 && q === 0)
         return 0;
@@ -194,6 +216,7 @@ function klDivergence(p, q){
         return Infinity;
     return p * Math.log(p/q);
 }
+
 
 function updateKLDivergence() {
     let pvals = pData.map(d=>d[1]);
