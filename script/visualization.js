@@ -4,7 +4,8 @@ const qColor = "#FCBCB8";
 let mouseDown = 0;
 let svg = d3.select("svg");
 
-let tip = d3.tip().attr("class", "d3-tip").html((d, i) => klDivergence(pData[i][1], qData[i][1]));
+printTooltip = (d, i) => klDivergence(pData[i][1], qData[i][1]).toFixed(5);
+let tip = d3.tip().attr("class", "d3-tip").html((d, i) => printTooltip(d, i));
 
 const margin = {top: 20, right: 20, bottom: 20, left: 40};
 const header_size = document.querySelector("body > nav").clientHeight;
@@ -90,7 +91,7 @@ function drawBackBars() {
         drawBarChart("P");
         drawBarChart("Q");
 
-        document.querySelector("div.d3-tip").textContent = klDivergence(pData[i][1], qData[i][1]);
+        document.querySelector("div.d3-tip").textContent = printTooltip(d, i);
     }
 
     chartGroup.call(tip);
@@ -192,8 +193,8 @@ function updateKLDivergence() {
 
     let klPQsum = d3.sum(d3.zip(pmarg, qmarg).map(d=>klDivergence(d[0], d[1])));
     let klQPsum = d3.sum(d3.zip(pmarg, qmarg).map(d=>klDivergence(d[1], d[0])));
-    textGroupTextPQ.text("KL(P||Q) = " + Math.round(klPQsum * 100000)/100000);
-    textGroupTextQP.text("KL(Q||P) = " + Math.round(klQPsum * 100000)/100000);
+    textGroupTextPQ.text("KL(P||Q) = " + klPQsum.toFixed(4));
+    textGroupTextQP.text("KL(Q||P) = " + klQPsum.toFixed(4));
 }
 
 
