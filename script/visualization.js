@@ -34,7 +34,7 @@ transformedSVG = svg.append("g").attr("transform", "translate(" + margin.left + 
 
 // set the ranges
 let xNoPad = d3.scaleBand().range([0, width]);
-let x = d3.scaleBand().range([0, width]).padding(0.13);
+let x = d3.scaleBand().range([0, width]).padding(0);
 let y = d3.scaleLinear().range([height, 0]);
 
 let xValues = null;
@@ -129,13 +129,14 @@ function drawBackBars() {
         .append("rect")
         .attr("class", "backBar")
         .attr("fill", "transparent")
+        .attr("stroke-width", "0.3px")
+        .attr("stroke", "transparent")
         .attr("x", d => xNoPad(d[0]))
         .attr("y", y(maxVal))
         .attr("width", xNoPad.bandwidth())
         .attr("height", height - y(maxVal))
         .on('mouseover', tip.show)
         .on('mouseout', tip.hide)
-
         .on("click", (d, i) => {
             barClick(d, i);
         })
@@ -159,14 +160,24 @@ function drawBarChart(sel) {
         .attr("y", d => y(d[1]))
         .attr("height", d => height - y(d[1]));
 
+    let size = 4.5/6;
+    let remain = 1-(size);
+
     bars.enter().append("rect")
         .attr("class",  className)
         .attr("opacity", 0.7)
         .attr("stroke-width", "1px")
         .attr("fill", classColor)
-        .attr("x", d => x(d[0]))
+        .attr("x", d => {
+            if (sel === "P") {
+                return x(d[0]) + (remain - 0.06)*x.bandwidth();
+            } else {
+                return x(d[0]) + 0.06*x.bandwidth();
+            }
+
+        })
         .attr("y", d => y(d[1]))
-        .attr("width", x.bandwidth())
+        .attr("width", x.bandwidth() * size)
         .attr("height", d => height - y(d[1]))
         .attr("pointer-events", "none")
         .merge(bars)
