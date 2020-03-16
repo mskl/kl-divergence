@@ -1,5 +1,5 @@
-const pColor = "#A7E8BD";
-const qColor = "#FCBCB8";
+const pColor = "#FCBCB8";
+const qColor = "#A7E8BD";
 
 let mouseDown = 0;
 let svg = d3.select("svg");
@@ -47,19 +47,33 @@ let maxVal = null;
 let barCount = null;
 
 function regenerateData(mv, bc) {
-    xValues = d3.range(bc);
-    pValues = d3.range(1, bc+1).map(d=>Math.max(Math.round((d/(bc))*(mv)), 1));
-    qValues = d3.range(1, bc+1).map(d=>Math.max(Math.round((d/(bc))*(mv)), 1)).reverse();
+    let changingBars = barCount !== bc;
+    let changingRange = maxVal !== mv;
 
-    x.domain(xValues);
+    console.log("changing bars " + changingBars);
+
+    if (changingBars) {
+        xValues = d3.range(bc);
+        pValues = d3.range(1, bc+1).map(d=>Math.max(Math.round((d/(bc))*(mv)), 1));
+        qValues = d3.range(1, bc+1).map(d=>Math.max(Math.round((d/(bc))*(mv)), 1)).reverse();
+
+        xNoPad.domain(xValues);
+        x.domain(xValues);
+
+        pData = d3.zip(xValues, pValues);
+        qData = d3.zip(xValues, qValues);
+    }
+
+    // Limit the maximum values when downscaling
+    pData = pData.map((d)=>([d[0], Math.min(d[1], mv)]));
+    qData = qData.map((d)=>([d[0], Math.min(d[1], mv)]));
     y.domain([0, mv]);
-    xNoPad.domain(xValues);
-
-    pData = d3.zip(xValues, pValues);
-    qData = d3.zip(xValues, qValues);
 
     if (chartGroup) chartGroup.remove();
     chartGroup = transformedSVG.append("g");
+
+    barCount = bc;
+    maxVal = mv;
 
     drawBackBars();
     drawBarChart("P");
@@ -70,10 +84,10 @@ function regenerateData(mv, bc) {
 }
 
 function numberElementsChanged() {
-    maxVal = parseInt(document.querySelector("#max-value-input").value);
-    barCount = parseInt(document.querySelector("#bars-count-input").value);
+    let mv = parseInt(document.querySelector("#max-value-input").value);
+    let bc = parseInt(document.querySelector("#bars-count-input").value);
 
-    regenerateData(maxVal, barCount);
+    regenerateData(mv, bc);
 }
 
 // IMPORTANT: Draws the whole chart
