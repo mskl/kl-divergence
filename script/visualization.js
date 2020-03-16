@@ -4,7 +4,7 @@ const qColor = "#FCBCB8";
 let mouseDown = 0;
 let svg = d3.select("svg");
 
-let tip = d3.tip().attr("class", "tip").html((d, i) => klDivergence(pData[i][1], qData[i][1]));
+let tip = d3.tip().attr("class", "d3-tip").html((d, i) => klDivergence(pData[i][1], qData[i][1]));
 
 const margin = {top: 20, right: 20, bottom: 20, left: 40};
 const header_size = document.querySelector("body > nav").clientHeight;
@@ -90,7 +90,7 @@ function drawBackBars() {
         drawBarChart("P");
         drawBarChart("Q");
 
-        document.querySelector("div.tip").textContent = klDivergence(pData[i][1], qData[i][1]);
+        document.querySelector("div.d3-tip").textContent = klDivergence(pData[i][1], qData[i][1]);
     }
 
     chartGroup.call(tip);
