@@ -11,19 +11,15 @@ printTooltip = (d, i) => {
     let pdiv = klDivergence(pData[i][1] / pSum, qData[i][1] / qSum);
     let qdiv = klDivergence(qData[i][1] / qSum, pData[i][1] / pSum);
 
-    let pspace = "";
-    let qspace = "";
+    let pspace = (Math.sign(pdiv) >= 0) ? " " : "";
+    let qspace = (Math.sign(qdiv) >= 0) ? " " : "";
 
-    if (Math.sign(pdiv) >= 0) {
-        pspace = " ";
-    }
-    if (Math.sign(qdiv) >= 0) {
-        qspace = " ";
-    }
+    return "<table>" +
+    "<tr><td>p×log(p/q):</td><td align=\"right\">" + pdiv.toFixed(2) + "</td></tr>" +
+    "<tr><td>q×log(q/p):</td><td align=\"right\">" + qdiv.toFixed(2) + "</td></tr>" +
+    "</table>";
 
-    return "p: " + (pData[i][1] / pSum).toFixed(2) + ", q: " + (qData[i][1] / qSum).toFixed(2)
-        + "<br>" + "p×log(p/q):" + pspace + pdiv.toFixed(2)
-        + "<br>" + "q×log(q/p):" + qspace + qdiv.toFixed(2);
+    // return "p: " + (pData[i][1] / pSum).toFixed(2) + ", q: " + (qData[i][1] / qSum).toFixed(2)
 };
 
 let tip = d3.tip().attr("class", "text-monospace").attr("class", "d3-tip").html((d, i) => printTooltip(d, i));
@@ -148,8 +144,8 @@ function drawBackBars() {
                 barClick(d, i);
             }
         })
-        .on('mouseover', tip.show)
-        .on('mouseout', tip.hide);
+        .on('mouseover', tip.show);
+        //.on('mouseout', tip.hide);
 }
 
 
