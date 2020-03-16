@@ -27,3 +27,12 @@ body {
     width: 100%;
     background-color: #f5f5f5;
 }
+
+.d3-tip {
+    line-height: 1;
+    padding: 3px 6px 3px 6px;
+    background: rgba(0, 0, 0, 0.36);
+    color: #fff;
+    border-radius: 2px;
+    pointer-events: none;
+}
