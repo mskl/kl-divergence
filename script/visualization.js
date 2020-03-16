@@ -11,18 +11,14 @@ printTooltip = (d, i) => {
     let pdiv = klDivergence(pData[i][1] / pSum, qData[i][1] / qSum);
     let qdiv = klDivergence(qData[i][1] / qSum, pData[i][1] / pSum);
 
-    let pspace = (Math.sign(pdiv) >= 0) ? " " : "";
-    let qspace = (Math.sign(qdiv) >= 0) ? " " : "";
-
     return "<table>" +
     "<tr><td>p×log(p/q):</td><td align=\"right\">" + pdiv.toFixed(2) + "</td></tr>" +
     "<tr><td>q×log(q/p):</td><td align=\"right\">" + qdiv.toFixed(2) + "</td></tr>" +
     "</table>";
-
-    // return "p: " + (pData[i][1] / pSum).toFixed(2) + ", q: " + (qData[i][1] / qSum).toFixed(2)
 };
 
-let tip = d3.tip().attr("class", "text-monospace").attr("class", "d3-tip").html((d, i) => printTooltip(d, i));
+let tip = d3.tip().offset([20, 0]).attr("pointer-events", "none").attr("class", "noselect")
+    .attr("class", "text-monospace").attr("class", "d3-tip").html((d, i) => printTooltip(d, i));
 
 const margin = {top: 20, right: 20, bottom: 20, left: 40};
 const header_size = document.querySelector("body > nav").clientHeight;
@@ -63,11 +59,12 @@ let textGroupTextQP = null;
 let maxVal = null;
 let barCount = null;
 
+// IMPORTANT: Initially draws the whole chart
+numberElementsChanged();
+
 function regenerateData(mv, bc) {
     let changingBars = barCount !== bc;
     let changingRange = maxVal !== mv;
-
-    console.log("changing bars " + changingBars);
 
     if (changingBars) {
         xValues = d3.range(bc);
@@ -100,6 +97,7 @@ function regenerateData(mv, bc) {
     updateKLDivergence();
 }
 
+
 function numberElementsChanged() {
     let mv = parseInt(document.querySelector("#max-value-input").value);
     let bc = parseInt(document.querySelector("#bars-count-input").value);
@@ -107,8 +105,6 @@ function numberElementsChanged() {
     regenerateData(mv, bc);
 }
 
-// IMPORTANT: Initially draws the whole chart
-numberElementsChanged();
 
 function drawBackBars() {
     function barClick(d, i) {
@@ -122,7 +118,8 @@ function drawBackBars() {
         drawBarChart("P");
         drawBarChart("Q");
 
-        document.querySelector("div.d3-tip").innerHTML = printTooltip(d, i);
+        let tipObject = document.querySelector("div.d3-tip");
+        tipObject.innerHTML = printTooltip(d, i);
     }
 
     chartGroup.call(tip);
@@ -133,9 +130,12 @@ function drawBackBars() {
         .attr("class", "backBar")
         .attr("fill", "transparent")
         .attr("x", d => xNoPad(d[0]))
-        .attr("width", xNoPad.bandwidth())
         .attr("y", y(maxVal))
+        .attr("width", xNoPad.bandwidth())
         .attr("height", height - y(maxVal))
+        .on('mouseover', tip.show)
+        .on('mouseout', tip.hide)
+
         .on("click", (d, i) => {
             barClick(d, i);
         })
@@ -144,8 +144,6 @@ function drawBackBars() {
                 barClick(d, i);
             }
         })
-        .on('mouseover', tip.show);
-        //.on('mouseout', tip.hide);
 }
 
 
@@ -167,8 +165,8 @@ function drawBarChart(sel) {
         .attr("stroke-width", "1px")
         .attr("fill", classColor)
         .attr("x", d => x(d[0]))
-        .attr("width", x.bandwidth())
         .attr("y", d => y(d[1]))
+        .attr("width", x.bandwidth())
         .attr("height", d => height - y(d[1]))
         .attr("pointer-events", "none")
         .merge(bars)
