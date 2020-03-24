@@ -140,18 +140,9 @@ function drawBackBars() {
         .attr("y", y(maxVal))
         .attr("width", xNoPad.bandwidth())
         .attr("height", height - y(maxVal))
-        .on('mouseover', (d, i) => {
-            tip.show;
-            selectedStroke[i] = true;
-            drawBarChart("P");
-            drawBarChart("Q");
-        })
-        .on('mouseout', (d, i) => {
-            tip.hide;
-            selectedStroke[i] = false;
-            drawBarChart("P");
-            drawBarChart("Q");
-        })
+        // TODO: Change the width of the line
+        .on("mouseover", tip.show)
+        .on('mouseout', tip.hide)
         .on("mousemove", (d, i) => {
             if (mouseDown) {
                 barClick(d, i);
@@ -170,8 +161,7 @@ function drawBarChart(sel) {
 
     let bars = chartGroup.selectAll("."+className).data(classData);
 
-    bars.transition()
-        .duration(40)
+    bars.transition().duration(30)
         .attr("y", d => y(d[1]))
         .attr("height", d => height - y(d[1]));
 
@@ -183,20 +173,12 @@ function drawBarChart(sel) {
         .attr("opacity", 0.7)
         .attr("stroke-width", "1px")
         .attr("fill", classColor)
-        .attr("x", d => {
-            if (sel === "P") {
-                return x(d[0]) + (remain - 0.06)*x.bandwidth();
-            } else {
-                return x(d[0]) + 0.06*x.bandwidth();
-            }
-
-        })
+        .attr("x", d => sel === "P" ? x(d[0]) + (remain - 0.06)*x.bandwidth() :  x(d[0]) + 0.06*x.bandwidth())
         .attr("y", d => y(d[1]))
         .attr("width", x.bandwidth() * size)
         .attr("height", d => height - y(d[1]))
         .attr("pointer-events", "none")
         .merge(bars)
-        .transition(30)
         .attr("stroke", (d, i) => sel === selectedDistribution ? "rgba(0,0,0,1)" : "transparent")
         .attr("stroke-width", (d, i) => selectedStroke[i] ? "2px" : "1px")
 }
