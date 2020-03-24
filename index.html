@@ -127,12 +127,17 @@
     $(document).ready(function() {
         $(document).mousedown(function(e) {
             if (e.which === 1) {
-                ++mouseDown;
+                mouseDown = 1;
+            }
+        });
+        $(document).mouseout(function(e) {
+            if (e.which === 1) {
+                mouseDown = 0;
             }
         });
         $(document).mouseup(function(e) {
             if (e.which === 1) {
-                --mouseDown;
+                mouseDown = 0;
             }
         });
     });

@@ -38,8 +38,8 @@ body {
 }
 
 .kl-rect {
-    stroke: black;
-    stroke-width: 0.5px;
+    /*stroke: black;
+    stroke-width: 0.3px;*/
     border-radius: 2px;
-    fill: rgba(255, 255, 255, 0.78);
+    fill: rgba(255, 255, 255, 0.84);
 }

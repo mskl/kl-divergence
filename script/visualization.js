@@ -208,7 +208,7 @@ function regenerateTextGroup() {
         .attr("transform", "translate(" + 20 + "," + (height-40)  + ")");
 
     textGroupBackground = textGroup.append("rect").attr("class", "kl-rect")
-        .attr("transform", "translate(-5, -20)").attr("width", 136).attr("height", 48);
+        .attr("transform", "translate(-5, -20)").attr("width", 136).attr("height", 48).attr("rx", 0).attr("ry", 0);
     textGroupTextPQ = textGroup.append("text").attr("class", "noselect")
         .attr("transform", "translate(0, 0)").text("KL(P||Q)=");
     textGroupTextQP = textGroup.append("text").attr("class", "noselect")
