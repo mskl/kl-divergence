@@ -44,6 +44,8 @@ let qValues = null;
 let pData = null;
 let qData = null;
 
+let selectedStroke = null;
+
 let selectedDistribution = "P";
 let buttonObject = document.querySelector("#selection_button");
 buttonObject.style.background = pColor;
@@ -83,6 +85,9 @@ function regenerateData(mv, bc) {
     pData = pData.map((d)=>([d[0], Math.min(d[1], mv)]));
     qData = qData.map((d)=>([d[0], Math.min(d[1], mv)]));
     y.domain([0, mv]);
+
+    // Currently highlighted bar is set to true
+    selectedStroke = Array(bc).fill(false);
 
     if (chartGroup) chartGroup.remove();
     chartGroup = transformedSVG.append("g");
@@ -130,21 +135,30 @@ function drawBackBars() {
         .append("rect")
         .attr("class", "backBar")
         .attr("fill", "transparent")
-        .attr("stroke-width", "0.3px")
         .attr("stroke", "transparent")
         .attr("x", d => xNoPad(d[0]))
         .attr("y", y(maxVal))
         .attr("width", xNoPad.bandwidth())
         .attr("height", height - y(maxVal))
-        .on('mouseover', tip.show)
-        .on('mouseout', tip.hide)
-        .on("click", (d, i) => {
-            barClick(d, i);
+        .on('mouseover', (d, i) => {
+            tip.show;
+            selectedStroke[i] = true;
+            drawBarChart("P");
+            drawBarChart("Q");
+        })
+        .on('mouseout', (d, i) => {
+            tip.hide;
+            selectedStroke[i] = false;
+            drawBarChart("P");
+            drawBarChart("Q");
         })
         .on("mousemove", (d, i) => {
             if (mouseDown) {
                 barClick(d, i);
             }
+        })
+        .on("click", (d, i) => {
+            barClick(d, i);
         })
 }
 
@@ -161,8 +175,8 @@ function drawBarChart(sel) {
         .attr("y", d => y(d[1]))
         .attr("height", d => height - y(d[1]));
 
-    let size = 4.5/6;
-    let remain = 1-(size);
+    let size = 4.5 / 6;
+    let remain = 1 - (size);
 
     bars.enter().append("rect")
         .attr("class",  className)
@@ -182,7 +196,9 @@ function drawBarChart(sel) {
         .attr("height", d => height - y(d[1]))
         .attr("pointer-events", "none")
         .merge(bars)
-        .attr("stroke", d => sel === selectedDistribution ? "rgba(0,0,0,0.5)" : "transparent");
+        .transition(30)
+        .attr("stroke", (d, i) => sel === selectedDistribution ? "rgba(0,0,0,1)" : "transparent")
+        .attr("stroke-width", (d, i) => selectedStroke[i] ? "2px" : "1px")
 }
 
 
