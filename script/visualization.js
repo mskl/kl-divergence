@@ -48,13 +48,14 @@ let selectedDistribution = "P";
 let buttonObject = document.querySelector("#selection_button");
 buttonObject.style.background = pColor;
 
-document.querySelector("#set_p_button").style.background = pColor;
-document.querySelector("#set_q_button").style.background = qColor;
+// document.querySelector("#set_p_button").style.background = pColor;
+// document.querySelector("#set_q_button").style.background = qColor;
 
 let textGroup = null;
 let chartGroup = null;
 let textGroupTextPQ = null;
 let textGroupTextQP = null;
+let textGroupBackground = null;
 
 let maxVal = null;
 let barCount = null;
@@ -182,7 +183,6 @@ function drawBarChart(sel) {
         .attr("pointer-events", "none")
         .merge(bars)
         .attr("stroke", d => sel === selectedDistribution ? "rgba(0,0,0,0.5)" : "transparent");
-
 }
 
 
@@ -204,11 +204,15 @@ function buttonSelectClick() {
 
 function regenerateTextGroup() {
     if (textGroup) textGroup.remove();
-    textGroup = transformedSVG.append("g").attr("transform", "translate(" + 0 + "," + (height-40)  + ")");
+    textGroup = transformedSVG.append("g").attr("class", "noselect").attr("pointer-events", "none")
+        .attr("transform", "translate(" + 20 + "," + (height-40)  + ")");
+
+    textGroupBackground = textGroup.append("rect").attr("class", "kl-rect")
+        .attr("transform", "translate(-5, -20)").attr("width", 136).attr("height", 48);
     textGroupTextPQ = textGroup.append("text").attr("class", "noselect")
-        .attr("transform", "translate(20, 0)").text("KL(P||Q)=");
+        .attr("transform", "translate(0, 0)").text("KL(P||Q)=");
     textGroupTextQP = textGroup.append("text").attr("class", "noselect")
-        .attr("transform", "translate(20, 20)").text("KL(Q||P)=");
+        .attr("transform", "translate(0, 20)").text("KL(Q||P)=");
 }
 
 
